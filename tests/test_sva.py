@@ -4,7 +4,12 @@ Tests for SVA functions.
 
 import numpy as np
 
-from pysva.sva import get_residuals, extract_svs, estimate_n_sv, sva
+from pysva.sva import get_residuals
+from pysva.sva import extract_svs
+from pysva.sva import estimate_n_sv
+from pysva.sva import sva
+from pysva.sva import identify_null_genes
+
 
 def test_get_residuals_shape():
     """Output should have same shape as input Y."""
@@ -50,3 +55,20 @@ def test_sva_returns_correct_shape():
     sv = sva(Y, X, n_sv=2)
     
     assert sv.shape == (20, 2)
+
+
+
+
+def test_identify_null_genes_returns_boolean_array():
+    """Should return boolean array of length n_genes."""
+    np.random.seed(42)
+    
+    Y = np.random.randn(20, 100)
+    X = np.column_stack([np.ones(20), [0]*10 + [1]*10])
+    sv = np.random.randn(20, 1)
+    
+    null_genes = identify_null_genes(Y, X, sv)
+    
+    assert null_genes.dtype == bool
+    assert len(null_genes) == 100
+

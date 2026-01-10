@@ -91,7 +91,56 @@ def estimate_n_sv(residuals, n_perm=20):
     
     return n_sv
 
+from scipy import stats
 
+
+def identify_null_genes(Y, X, sv, alpha=0.25):
+    """
+    Identify genes not affected by primary variable.
+    
+    Parameters
+    ----------
+    Y : array (n_samples, n_genes)
+        Expression matrix
+    X : array (n_samples, n_covariates)
+        Primary model matrix
+    sv : array (n_samples, n_sv)
+        Current SV estimate
+    alpha : float
+        P-value threshold (genes with p > alpha are null)
+    
+    Returns
+    -------
+    null_genes : array of bool (n_genes,)
+        True if gene is likely null
+    """
+    n_samples, n_genes = Y.shape
+    
+    # Combine X and SV
+    X_full = np.column_stack([X, sv])
+    n_params = X_full.shape[1]
+    
+    pvals = np.zeros(n_genes)
+    
+    for j in range(n_genes):
+        y = Y[:, j]
+        
+        # Fit full model
+        beta = np.linalg.lstsq(X_full, y, rcond=None)[0]
+        resid = y - X_full @ beta
+        
+        # Standard error for treatment effect (column 1)
+        mse = np.sum(resid ** 2) / (n_samples - n_params)
+        XtX_inv = np.linalg.inv(X_full.T @ X_full)
+        se = np.sqrt(mse * XtX_inv[1, 1])
+        
+        # t-test
+        t_stat = beta[1] / se
+        pvals[j] = 2 * (1 - stats.t.cdf(np.abs(t_stat), n_samples - n_params))
+    
+    null_genes = pvals > alpha
+    
+    return null_genes
 
 def sva(Y, X, n_sv=None):
     """
