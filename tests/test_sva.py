@@ -3,9 +3,8 @@ Tests for SVA functions.
 """
 
 import numpy as np
-from pysva.sva import get_residuals, extract_svs
 
-from pysva.sva import get_residuals, extract_svs, estimate_n_sv
+from pysva.sva import get_residuals, extract_svs, estimate_n_sv, sva
 
 def test_get_residuals_shape():
     """Output should have same shape as input Y."""
@@ -39,3 +38,15 @@ def test_estimate_n_sv_returns_integer():
     
     assert isinstance(n_sv, int)
     assert n_sv >= 0
+
+
+def test_sva_returns_correct_shape():
+    """SVA should return (n_samples, n_sv) array."""
+    np.random.seed(42)
+    
+    Y = np.random.randn(20, 100)
+    X = np.column_stack([np.ones(20), [0]*10 + [1]*10])
+    
+    sv = sva(Y, X, n_sv=2)
+    
+    assert sv.shape == (20, 2)

@@ -91,3 +91,35 @@ def estimate_n_sv(residuals, n_perm=20):
     
     return n_sv
 
+
+
+def sva(Y, X, n_sv=None):
+    """
+    Surrogate Variable Analysis.
+    
+    Parameters
+    ----------
+    Y : array (n_samples, n_genes)
+        Expression matrix
+    X : array (n_samples, n_covariates)
+        Primary model matrix
+    n_sv : int, optional
+        Number of surrogate variables. If None, estimate automatically.
+    
+    Returns
+    -------
+    sv : array (n_samples, n_sv)
+        Estimated surrogate variables
+    """
+    # Step 1: Get residuals
+    residuals = get_residuals(Y, X)
+    
+    # Step 2: Estimate n_sv if not provided
+    if n_sv is None:
+        n_sv = estimate_n_sv(residuals)
+    
+    # Step 3: Extract surrogate variables
+    sv = extract_svs(residuals, n_sv)
+    
+    return sv
+
