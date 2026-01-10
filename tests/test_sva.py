@@ -9,6 +9,7 @@ from pysva.sva import extract_svs
 from pysva.sva import estimate_n_sv
 from pysva.sva import sva
 from pysva.sva import identify_null_genes
+from pysva.sva import sva_iterative
 
 
 def test_get_residuals_shape():
@@ -72,3 +73,14 @@ def test_identify_null_genes_returns_boolean_array():
     assert null_genes.dtype == bool
     assert len(null_genes) == 100
 
+
+def test_sva_iterative_returns_correct_shape():
+    """Should return (n_samples, n_sv) array."""
+    np.random.seed(42)
+    
+    Y = np.random.randn(20, 100)
+    X = np.column_stack([np.ones(20), [0]*10 + [1]*10])
+    
+    sv = sva_iterative(Y, X, n_sv=2, n_iter=3)
+    
+    assert sv.shape == (20, 2)

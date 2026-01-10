@@ -160,6 +160,7 @@ def sva(Y, X, n_sv=None):
     sv : array (n_samples, n_sv)
         Estimated surrogate variables
     """
+    
     # Step 1: Get residuals
     residuals = get_residuals(Y, X)
     
@@ -172,3 +173,65 @@ def sva(Y, X, n_sv=None):
     
     return sv
 
+
+
+def sva_iterative(Y, X, n_sv=None, n_iter=5, alpha=0.25):
+    """
+    SVA with iterative refinement.
+
+    Parameters
+    ----------
+    Y : array (n_samples, n_genes)
+        Expression matrix
+    X : array (n_samples, n_covariates)
+        Primary model matrix
+    n_sv : int, optional
+        Number of surrogate variables. If None, estimate automatically.
+    n_iter : int
+        Number of iterations
+    alpha : float
+        P-value threshold for null genes
+    
+    Returns
+    -------
+    sv : array (n_samples, n_sv)
+        Estimated surrogate variables
+    """
+ 
+    # Step 1: Get residuals
+    residuals = get_residuals(Y, X)
+    
+    # Step 2: Estimate n_sv if not provided:
+    if n_sv is None: 
+       n_sv = estimate_n_sv(residuals)
+       if n_sv == 0:
+          raise ValueError("Ni Significant Surrogate Variables Found")
+    
+    # Step 3: Get Initial estimates of SVs from all genes
+    sv = extract_svs(residuals, n_sv) 
+   
+    # Step 4. Iterate
+    for i in range(n_iter):
+        # Find null genes
+        null_genes = identify_null_genes(Y, X, sv, alpha)
+        
+        # Check if we have enough null genes
+        if np.sum(null_genes) <= n_sv:
+           break # Stop, return Current SVs  
+
+	# Re-estimate SV from null genes only
+        residuals_null = residuals[:, null_genes]
+        sv_new = extract_svs(residuals_null, n_sv)
+
+        # Check stability comparing the first SV's correlation
+        # correlation of sv_new[:,0] with sv[:,0]
+        corr = np.corrcoef(sv[:, 0], sv_new[:, 0])[0,1]
+        if abs(corr) > 0.99:
+           sv = sv_new
+           break
+        
+        # update and continue
+        sv = sv_new
+    
+    return sv
+ 
