@@ -1,5 +1,6 @@
 """
-Compare sva() vs sva_iterative() on simulated data.
+Test SVA when SV is confounded with treatment.
+This is the hard case where iterative SVA should help.
 """
 
 import numpy as np
@@ -9,7 +10,7 @@ from pysva.sva import sva, sva_iterative
 np.random.seed(42)
 
 # ============================================
-# SIMULATE DATA
+# SIMULATE CONFOUNDED DATA
 # ============================================
 
 n_samples = 50
@@ -19,8 +20,16 @@ n_genes = 200
 treatment = np.array([0]*25 + [1]*25)
 X = np.column_stack([np.ones(n_samples), treatment])
 
-# True hidden confounder
-true_sv = np.random.randn(n_samples)
+# True hidden confounder - CORRELATED with treatment!
+true_sv = treatment * 0.5 + np.random.randn(n_samples) * 0.5
+
+corr_sv_treatment = np.corrcoef(true_sv, treatment)[0, 1]
+
+print("Data simulated (CONFOUNDED):")
+print(f"  Samples: {n_samples}")
+print(f"  Genes: {n_genes}")
+print(f"  DE genes: 20")
+print(f"  SV-treatment correlation: {corr_sv_treatment:.3f}")
 
 # Gene effects
 baseline = np.random.randn(n_genes) * 2
@@ -35,11 +44,6 @@ Y = np.zeros((n_samples, n_genes))
 for i in range(n_samples):
     Y_clean[i, :] = baseline + treatment[i] * treatment_effect + noise[i, :]
     Y[i, :] = Y_clean[i, :] + true_sv[i] * sv_effect
-
-print("Data simulated:")
-print(f"  Samples: {n_samples}")
-print(f"  Genes: {n_genes}")
-print(f"  DE genes: 20")
 
 # ============================================
 # RUN BOTH METHODS
@@ -59,11 +63,16 @@ corr_basic = np.corrcoef(true_sv, sv_basic[:, 0])[0, 1]
 corr_iter = np.corrcoef(true_sv, sv_iter[:, 0])[0, 1]
 
 print("\n" + "="*40)
-print("RESULTS")
+print("RESULTS (CONFOUNDED CASE)")
 print("="*40)
 print(f"Basic SVA correlation with true SV:     {abs(corr_basic):.4f}")
 print(f"Iterative SVA correlation with true SV: {abs(corr_iter):.4f}")
 print("="*40)
+
+if abs(corr_iter) > abs(corr_basic):
+    print("Winner: Iterative SVA")
+else:
+    print("Winner: Basic SVA")
 
 # ============================================
 # VISUALIZE
@@ -101,7 +110,7 @@ ax.axvline(x=24.5, color='black', linewidth=2, linestyle='--')
 ax.axhline(y=19.5, color='black', linewidth=2, linestyle='--')
 ax.set_ylabel('Genes')
 ax.set_xlabel('Samples')
-ax.set_title('SV Effect (confounder)')
+ax.set_title(f'SV Effect (corr with trt: {corr_sv_treatment:.2f})')
 plt.colorbar(im, ax=ax)
 
 # Panel 3: Raw data (with SV)
@@ -133,11 +142,11 @@ ax = axes[1, 2]
 bars = ax.bar(['Basic', 'Iterative'], [abs(corr_basic), abs(corr_iter)], 
               color=['steelblue', 'darkorange'])
 ax.set_ylabel('Correlation with True SV')
-ax.set_title('Comparison')
+ax.set_title('Comparison (Confounded)')
 ax.set_ylim(0, 1)
 
 plt.tight_layout()
-plt.savefig('sva_comparison.png', dpi=150)
+plt.savefig('sva_confounded.png', dpi=150)
 plt.show()
 
-print("\nPlot saved to sva_comparison.png")
+print("\nPlot saved to sva_confounded.png")
