@@ -52,3 +52,42 @@ def extract_svs(residuals, n_sv):
     sv = U[:, :n_sv]
     
     return sv
+
+
+
+def estimate_n_sv(residuals, n_perm=20):
+    """
+    Estimate number of surrogate variables using permutation.
+    
+    Parameters
+    ----------
+    residuals : array (n_samples, n_genes)
+        Residuals from get_residuals()
+    n_perm : int
+        Number of permutations for null distribution
+    
+    Returns
+    -------
+    n_sv : int
+        Estimated number of surrogate variables
+    """
+    n_samples, n_genes = residuals.shape
+    
+    # Get observed singular values
+    U, S_obs, Vt = svd(residuals, full_matrices=False)
+    
+    # Build null distribution by permuting each column
+    S_null = np.zeros((n_perm, len(S_obs)))
+    for p in range(n_perm):
+        residuals_perm = residuals.copy()
+        for j in range(n_genes):
+            residuals_perm[:, j] = np.random.permutation(residuals_perm[:, j])
+        _, S_perm, _ = svd(residuals_perm, full_matrices=False)
+        S_null[p, :] = S_perm
+    
+    # Count how many observed SVs exceed 95th percentile of null
+    threshold = np.percentile(S_null, 95, axis=0)
+    n_sv = int(np.sum(S_obs > threshold))
+    
+    return n_sv
+

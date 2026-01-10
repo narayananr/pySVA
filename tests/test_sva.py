@@ -5,6 +5,7 @@ Tests for SVA functions.
 import numpy as np
 from pysva.sva import get_residuals, extract_svs
 
+from pysva.sva import get_residuals, extract_svs, estimate_n_sv
 
 def test_get_residuals_shape():
     """Output should have same shape as input Y."""
@@ -27,3 +28,14 @@ def test_extract_svs_shape():
     
     assert sv.shape == (10, 3)
 
+
+
+
+def test_estimate_n_sv_returns_integer():
+    """Should return a non-negative integer."""
+    residuals = np.random.randn(20, 100)
+    
+    n_sv = estimate_n_sv(residuals)
+    
+    assert isinstance(n_sv, int)
+    assert n_sv >= 0
