@@ -5,6 +5,8 @@ SVA functions.
 
 import numpy as np
 
+from scipy.linalg import svd
+
 
 def get_residuals(Y, X):
     """
@@ -28,3 +30,25 @@ def get_residuals(Y, X):
     
     return residuals
 
+
+
+def extract_svs(residuals, n_sv):
+    """
+    Extract surrogate variables from residuals using SVD.
+    
+    Parameters
+    ----------
+    residuals : array (n_samples, n_genes)
+        Residuals from get_residuals()
+    n_sv : int
+        Number of surrogate variables to extract
+    
+    Returns
+    -------
+    sv : array (n_samples, n_sv)
+        Surrogate variables
+    """
+    U, S, Vt = svd(residuals, full_matrices=False)
+    sv = U[:, :n_sv]
+    
+    return sv

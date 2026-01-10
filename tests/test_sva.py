@@ -3,7 +3,7 @@ Tests for SVA functions.
 """
 
 import numpy as np
-from pysva.sva import get_residuals
+from pysva.sva import get_residuals, extract_svs
 
 
 def test_get_residuals_shape():
@@ -14,3 +14,16 @@ def test_get_residuals_shape():
     residuals = get_residuals(Y, X)
     
     assert residuals.shape == Y.shape
+
+
+
+
+def test_extract_svs_shape():
+    """Output should be (n_samples, n_sv)."""
+    residuals = np.random.randn(10, 50)
+    n_sv = 3
+    
+    sv = extract_svs(residuals, n_sv)
+    
+    assert sv.shape == (10, 3)
+
