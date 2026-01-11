@@ -8,7 +8,7 @@ setup(
         "numpy",
         "scipy",
     ],
-    author="Your Name",
+    author="Narayanan Raghupathy",
     description="Surrogate Variable Analysis in Python",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
