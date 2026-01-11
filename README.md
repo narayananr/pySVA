@@ -116,4 +116,4 @@ $$ Y = X\beta + SV\gamma + \epsilon $$
 ## References
 
 1. Leek & Storey (2007), [Capturing Heterogeneity in Gene Expression Studies by Surrogate Variable Analysis](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.0030161).
-2. Leek (2014). "svaseq: removing batch effects and other unwanted noise from sequencing data".
+2. Leek (2014). [svaseq: removing batch effects and other unwanted noise from sequencing data](https://academic.oup.com/nar/article/42/21/e161/2903156).
